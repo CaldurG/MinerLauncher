@@ -122,6 +122,7 @@ BOOL LoadConfig()
   if (!hMiners)
     return FALSE;
 
+  ZeroMemory(hMiners, MINER_COUNT * sizeof(HANDLE));
   return TRUE;
 }
 
