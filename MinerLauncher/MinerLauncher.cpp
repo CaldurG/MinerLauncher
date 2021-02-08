@@ -3,8 +3,8 @@
 #define MAX_ITEMS 256
 
 const char* CONFIG = ".\\MinerLauncher.ini";
-UINT32 GAME_COUNT;
-UINT32 MINER_COUNT;
+int GAME_COUNT;
+int MINER_COUNT;
 char GAMING_PROFILE[1024];
 char MINING_PROFILE[1024];
 char* GAMES[MAX_ITEMS];
