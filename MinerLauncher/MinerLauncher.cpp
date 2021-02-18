@@ -1,17 +1,17 @@
-#include "framework.h"
-
-#define MAX_ITEMS 256
+#include "MinerLauncher.h"
+#include "Tray.h"
 
 const char* CONFIG = ".\\MinerLauncher.ini";
+
 int GAME_COUNT;
 int MINER_COUNT;
-char GAMING_PROFILE[1024];
-char MINING_PROFILE[1024];
+char GAMING_PROFILE[MAX_COMMAND];
+char MINING_PROFILE[MAX_COMMAND];
 char* GAMES[MAX_ITEMS];
 char* MINERS[MAX_ITEMS];
 
 HANDLE hGame;
-HANDLE *hMiners;
+HANDLE* hMiners;
 
 BOOL istartswith(const char* str, const char* prefix)
 {
@@ -22,6 +22,18 @@ BOOL istartswith(const char* str, const char* prefix)
     return FALSE;
 
   return _strnicmp(str, prefix, prefixLen) == 0;
+}
+
+BOOL mining()
+{
+  if (!hMiners)
+    return FALSE;
+
+  for (int i = 0; i < MINER_COUNT; i++)
+    if (hMiners[i])
+      return TRUE;
+
+  return FALSE;
 }
 
 void CloseMiner()
@@ -78,7 +90,7 @@ void StartMiner()
   }  
 }
 
-int load(const char* section, const char* key, char** dst)
+int load(const char* section, const char key[8], char** dst)
 {
   char name[32];
   int count = 0;
@@ -86,11 +98,11 @@ int load(const char* section, const char* key, char** dst)
   for (count; count < MAX_ITEMS; count++)
   {
     sprintf_s(name, "%s%d", key, count);
-    char* value = (char*)malloc(1024);
+    char* value = (char*)malloc(MAX_COMMAND);
     if (!value)
       return 0;
 
-    if (GetPrivateProfileStringA(section, name, NULL, value, 1024, CONFIG))
+    if (GetPrivateProfileStringA(section, name, NULL, value, MAX_COMMAND, CONFIG))
       dst[count] = value;
     else
     {
@@ -118,11 +130,10 @@ BOOL LoadConfig()
   if (GAME_COUNT == 0)
     return FALSE;
 
-  hMiners = (HANDLE*)malloc(MINER_COUNT * sizeof(HANDLE));
+  hMiners = (HANDLE*)calloc(MINER_COUNT, sizeof(HANDLE));
   if (!hMiners)
     return FALSE;
 
-  ZeroMemory(hMiners, MINER_COUNT * sizeof(HANDLE));
   return TRUE;
 }
 
@@ -174,7 +185,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   if (!LoadConfig())
     return 0;
 
-  StartMiner();
+  if (!InitTray())
+    return 0;
+
+  //StartMiner();
   
   HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, HandleForegroundWindowChange, 0, 0, WINEVENT_SKIPOWNPROCESS | WINEVENT_OUTOFCONTEXT);
   if (!hook)
@@ -182,9 +196,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
   // Main message loop:
   MSG msg;
-  while (GetMessage(&msg, NULL, 0, 0));
+  while (GetMessageA(&msg, NULL, 0, 0))
+  {
+    if (msg.message == WM_QUIT)
+      break;
+
+    TranslateMessage(&msg);
+    DispatchMessageA(&msg);
+  }
   
   UnhookWinEvent(hook);
+  CloseTray();
+
   return 0;
 }
 
