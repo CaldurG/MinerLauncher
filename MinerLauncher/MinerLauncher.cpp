@@ -131,32 +131,40 @@ void CALLBACK HandleForegroundWindowChange(HWINEVENTHOOK hHook, DWORD dwEvent, H
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-  config = new Config(CONFIG_PATH);
-  Tray tray = Tray(ICO_PATH);
-  
-  hMiners = (HANDLE*)calloc(config->miner_count, sizeof(HANDLE));
-  if (!hMiners)
-    return 1;
-
-  //StartMiner();
-  
-  HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, HandleForegroundWindowChange, 0, 0, WINEVENT_SKIPOWNPROCESS | WINEVENT_OUTOFCONTEXT);
-  if (!hook)
-    return 1;
-
-  // Main message loop:
-  MSG msg;
-  while (GetMessageA(&msg, NULL, 0, 0))
+  try
   {
-    if (msg.message == WM_QUIT)
-      break;
+    config = new Config(CONFIG_PATH);
+    Tray tray = Tray(ICO_PATH);
 
-    TranslateMessage(&msg);
-    DispatchMessageA(&msg);
+    hMiners = (HANDLE*)calloc(config->miner_count, sizeof(HANDLE));
+    if (!hMiners)
+      return 1;
+
+    //StartMiner();
+
+    HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, HandleForegroundWindowChange, 0, 0, WINEVENT_SKIPOWNPROCESS | WINEVENT_OUTOFCONTEXT);
+    if (!hook)
+      return 1;
+
+    // Main message loop:
+    MSG msg;
+    while (GetMessageA(&msg, NULL, 0, 0))
+    {
+      if (msg.message == WM_QUIT)
+        break;
+
+      TranslateMessage(&msg);
+      DispatchMessageA(&msg);
+    }
+
+    UnhookWinEvent(hook);
+    return 0;
   }
-  
-  UnhookWinEvent(hook);
-  return 0;
+  catch (const char* msg)
+  {
+    MessageBoxA(NULL, msg, "Error", MB_ICONEXCLAMATION);
+    return 1;
+  }
 }
 
 

@@ -102,7 +102,7 @@ Tray::Tray(const char* icoPath)
   if (hWnd == NULL)
     throw "CreateWindowExA failed";
 
-  if (!ExtractIconExA(icoPath, 0, NULL, &hIcon, 1))
+  if (ExtractIconExA(icoPath, 0, NULL, &hIcon, 1) == -1)
     throw "ExtractIconExA failed";
 
   notifyIconData.cbSize = sizeof(notifyIconData);
