@@ -1,15 +1,11 @@
 #include "MinerLauncher.h"
 #include "Tray.h"
+#include "Config.h"
 
-const char* CONFIG = ".\\MinerLauncher.ini";
+const char* CONFIG_PATH = ".\\MinerLauncher.ini";
+const char* ICO_PATH = ".\\MinerLauncher.ico";
 
-int GAME_COUNT;
-int MINER_COUNT;
-char GAMING_PROFILE[MAX_COMMAND];
-char MINING_PROFILE[MAX_COMMAND];
-char* GAMES[MAX_ITEMS];
-char* MINERS[MAX_ITEMS];
-
+Config* config;
 HANDLE hGame;
 HANDLE* hMiners;
 
@@ -29,7 +25,7 @@ BOOL mining()
   if (!hMiners)
     return FALSE;
 
-  for (int i = 0; i < MINER_COUNT; i++)
+  for (int i = 0; i < config->miner_count; i++)
     if (hMiners[i])
       return TRUE;
 
@@ -39,7 +35,7 @@ BOOL mining()
 void CloseMiner()
 {
   // close miners
-  for (int i = 0; i < MINER_COUNT; i++)
+  for (int i = 0; i < config->miner_count; i++)
   {
     if (!hMiners[i])
       continue;
@@ -54,7 +50,7 @@ void CloseMiner()
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
   ZeroMemory(&pi, sizeof(pi));
-  if (CreateProcessA(NULL, (LPSTR)GAMING_PROFILE, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+  if (CreateProcessA(NULL, (LPSTR)config->gaming_profile, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
   {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
@@ -68,73 +64,26 @@ void StartMiner()
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
   ZeroMemory(&pi, sizeof(pi));
-  if (CreateProcessA(NULL, (LPSTR)MINING_PROFILE, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+  if (CreateProcessA(NULL, (LPSTR)config->mining_profile, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
   {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
   }
 
   // start miners
-  for (int i = 0; i < MINER_COUNT; i++)
+  for (int i = 0; i < config->game_count; i++)
   {
     if (hMiners[i])
       continue;
 
     ZeroMemory(&si, sizeof(si));
     ZeroMemory(&pi, sizeof(pi));
-    if (CreateProcessA(NULL, (LPSTR)MINERS[i], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    if (CreateProcessA(NULL, (LPSTR)config->miners[i], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
       CloseHandle(pi.hThread);
       hMiners[i] = pi.hProcess;
     }
   }  
-}
-
-int load(const char* section, const char key[8], char** dst)
-{
-  char name[32];
-  int count = 0;
- 
-  for (count; count < MAX_ITEMS; count++)
-  {
-    sprintf_s(name, "%s%d", key, count);
-    char* value = (char*)malloc(MAX_COMMAND);
-    if (!value)
-      return 0;
-
-    if (GetPrivateProfileStringA(section, name, NULL, value, MAX_COMMAND, CONFIG))
-      dst[count] = value;
-    else
-    {
-      free(value);
-      break;
-    }
-  }
-
-  return count;
-}
-
-BOOL LoadConfig()
-{  
-  if (!GetPrivateProfileStringA("GAME", "profile", NULL, GAMING_PROFILE, sizeof(GAMING_PROFILE), CONFIG))
-    return FALSE;
-  
-  if (!GetPrivateProfileStringA("MINE", "profile", NULL, MINING_PROFILE, sizeof(MINING_PROFILE), CONFIG))
-    return FALSE;
-
-  MINER_COUNT = load("MINE", "miner", MINERS);
-  if (MINER_COUNT == 0)
-    return FALSE;
-
-  GAME_COUNT = load("GAME", "game", GAMES);
-  if (GAME_COUNT == 0)
-    return FALSE;
-
-  hMiners = (HANDLE*)calloc(MINER_COUNT, sizeof(HANDLE));
-  if (!hMiners)
-    return FALSE;
-
-  return TRUE;
 }
 
 HANDLE isGame(HWND hWnd)
@@ -154,8 +103,8 @@ HANDLE isGame(HWND hWnd)
   char path[MAX_PATH];
   if (GetModuleFileNameExA(hProc, NULL, path, MAX_PATH))
   {
-    for (int i=0; i<GAME_COUNT; i++)
-      if (istartswith(path, GAMES[i]))
+    for (int i=0; i<config->game_count; i++)
+      if (istartswith(path, config->games[i]))
         return hProc;
   }
 
@@ -182,11 +131,12 @@ void CALLBACK HandleForegroundWindowChange(HWINEVENTHOOK hHook, DWORD dwEvent, H
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-  if (!LoadConfig())
-    return 0;
-
-  if (!InitTray())
-    return 0;
+  config = new Config(CONFIG_PATH);
+  Tray tray = Tray(ICO_PATH);
+  
+  hMiners = (HANDLE*)calloc(config->miner_count, sizeof(HANDLE));
+  if (!hMiners)
+    return 1;
 
   //StartMiner();
   
@@ -206,8 +156,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   }
   
   UnhookWinEvent(hook);
-  CloseTray();
-
   return 0;
 }
 

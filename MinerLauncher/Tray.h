@@ -11,5 +11,17 @@
 #define TRAY_TEXT_START "Start Mining"
 #define TRAY_TEXT_STOP "Stop Mining"
 
-void CloseTray();
-BOOL InitTray();
+class Tray
+{
+  NOTIFYICONDATA notifyIconData;
+  HMENU hMenu = NULL;
+  HICON hIcon = NULL;
+
+public:
+  Tray(const char* icoPath);
+  ~Tray();
+
+private:
+  static LRESULT CALLBACK trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  BOOL updateMenuItem(UINT id, const char* text);
+};

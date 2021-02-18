@@ -143,12 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MinerLauncher.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tray.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="MinerLauncher.cpp" />
     <ClCompile Include="Tray.cpp" />
   </ItemGroup>
