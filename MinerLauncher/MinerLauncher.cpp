@@ -6,6 +6,7 @@ const char* CONFIG_PATH = ".\\MinerLauncher.ini";
 const char* ICO_PATH = ".\\MinerLauncher.ico";
 
 Config* config;
+Tray* tray;
 HANDLE hGame;
 HANDLE* hMiners;
 
@@ -55,6 +56,8 @@ void CloseMiner()
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
   }
+
+  tray->updateMenuItem(ID_TRAY_MINE, TRAY_TEXT_START);
 }
 
 void StartMiner()
@@ -84,6 +87,8 @@ void StartMiner()
       hMiners[i] = pi.hProcess;
     }
   }  
+
+  tray->updateMenuItem(ID_TRAY_MINE, TRAY_TEXT_STOP);
 }
 
 HANDLE isGame(HWND hWnd)
@@ -122,11 +127,6 @@ void CALLBACK HandleForegroundWindowChange(HWINEVENTHOOK hHook, DWORD dwEvent, H
      return; 
   
   CloseMiner();
-  WaitForSingleObject(hGame, INFINITE);
-  CloseHandle(hGame);
-  hGame = NULL; 
-
-  StartMiner();
 } 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
@@ -138,26 +138,45 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     if (!hMiners)
       return 1;
 
+    tray = new Tray(ICO_PATH);
     StartMiner();
 
     HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, HandleForegroundWindowChange, 0, 0, WINEVENT_SKIPOWNPROCESS | WINEVENT_OUTOFCONTEXT);
     if (!hook)
-      return 1;
-
-    Tray tray = Tray(ICO_PATH);
+      return 1;    
 
     // Main message loop:
     MSG msg;
-    while (GetMessageA(&msg, NULL, 0, 0))
+    while (TRUE)
     {
-      if (msg.message == WM_QUIT)
-        break;
+      if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+      {
+        if (msg.message == WM_QUIT)
+          break;
 
-      TranslateMessage(&msg);
-      DispatchMessageA(&msg);
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+      }
+      else
+      {
+        if (!hGame)
+          Sleep(100);
+      }
+
+      if (hGame)
+      {
+        if (WaitForSingleObject(hGame, 100) != WAIT_TIMEOUT)
+        {
+          CloseHandle(hGame);
+          hGame = NULL;
+          StartMiner();
+        }
+      }
     }
 
     UnhookWinEvent(hook);
+    delete config;
+    delete tray;
     return 0;
   }
   catch (const char* msg)

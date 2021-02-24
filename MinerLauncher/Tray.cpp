@@ -1,7 +1,7 @@
 #include "Tray.h"
 #include "MinerLauncher.h"
 
-Tray* tray;
+Tray* self;
 
 BOOL Tray::updateMenuItem(UINT id, const char* text)
 {
@@ -32,7 +32,7 @@ LRESULT CALLBACK Tray::trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
       POINT point;
       GetCursorPos(&point);
       SetForegroundWindow(hWnd);
-      DWORD cmd = TrackPopupMenu(tray->hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY, point.x, point.y, 0, hWnd, NULL);
+      DWORD cmd = TrackPopupMenu(self->hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY, point.x, point.y, 0, hWnd, NULL);
       switch (cmd)
       {
       case ID_TRAY_CLOSE:
@@ -40,15 +40,9 @@ LRESULT CALLBACK Tray::trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         break;
       case ID_TRAY_MINE:
         if (mining())
-        {
           CloseMiner();
-          tray->updateMenuItem(ID_TRAY_MINE, TRAY_TEXT_START);
-        }
         else
-        {
           StartMiner();
-          tray->updateMenuItem(ID_TRAY_MINE, TRAY_TEXT_STOP);
-        }
         break;
       }
       return 0;
@@ -61,7 +55,7 @@ LRESULT CALLBACK Tray::trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 Tray::Tray(const char* icoPath)
 {
-  tray = this;
+  self = this;
   WNDCLASSEXA wndCls;
 
   ZeroMemory(&wndCls, sizeof(wndCls));
@@ -119,7 +113,7 @@ Tray::Tray(const char* icoPath)
 
 Tray::~Tray()
 {
-  tray = NULL;
+  self = NULL;
   Shell_NotifyIconA(NIM_DELETE, &notifyIconData);  
   
   if (hIcon)

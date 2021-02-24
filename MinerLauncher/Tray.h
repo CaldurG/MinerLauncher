@@ -20,8 +20,8 @@ class Tray
 public:
   Tray(const char* icoPath);
   ~Tray();
+  BOOL updateMenuItem(UINT id, const char* text);
 
 private:
-  static LRESULT CALLBACK trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  BOOL updateMenuItem(UINT id, const char* text);
+  static LRESULT CALLBACK trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);  
 };
