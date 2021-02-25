@@ -145,27 +145,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     if (!hook)
       return 1;    
 
+    UINT_PTR timer = SetTimer(NULL, NULL, 500, NULL);
+
     // Main message loop:
     MSG msg;
-    while (TRUE)
+    while (GetMessage(&msg, NULL, 0, 0))
     {
-      if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
-      {
-        if (msg.message == WM_QUIT)
-          break;
+      if (msg.message == WM_QUIT)
+        break;
 
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-      }
-      else
-      {
-        if (!hGame)
-          Sleep(100);
-      }
+      TranslateMessage(&msg);
+      DispatchMessageA(&msg);
 
       if (hGame)
       {
-        if (WaitForSingleObject(hGame, 100) != WAIT_TIMEOUT)
+        if (WaitForSingleObject(hGame, 0) != WAIT_TIMEOUT)
         {
           CloseHandle(hGame);
           hGame = NULL;
@@ -173,7 +167,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         }
       }
     }
-
+      
+    KillTimer(NULL, timer);
     UnhookWinEvent(hook);
     delete config;
     delete tray;
