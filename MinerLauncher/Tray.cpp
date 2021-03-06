@@ -53,7 +53,7 @@ LRESULT CALLBACK Tray::trayProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
   return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
-Tray::Tray(const char* icoPath)
+Tray::Tray(HICON hIcon)
 {
   self = this;
   WNDCLASSEXA wndCls;
@@ -96,9 +96,6 @@ Tray::Tray(const char* icoPath)
   if (hWnd == NULL)
     throw "CreateWindowExA failed";
 
-  if (ExtractIconExA(icoPath, 0, NULL, &hIcon, 1) == -1)
-    throw "ExtractIconExA failed";
-
   notifyIconData.cbSize = sizeof(notifyIconData);
   notifyIconData.hWnd = hWnd;
   notifyIconData.uID = 0;
@@ -116,9 +113,6 @@ Tray::~Tray()
   self = NULL;
   Shell_NotifyIconA(NIM_DELETE, &notifyIconData);  
   
-  if (hIcon)
-    DestroyIcon(hIcon);
-
   if (hMenu)
     DestroyMenu(hMenu);
 

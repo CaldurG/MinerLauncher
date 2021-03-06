@@ -15,10 +15,9 @@ class Tray
 {
   NOTIFYICONDATA notifyIconData;
   HMENU hMenu = NULL;
-  HICON hIcon = NULL;
 
 public:
-  Tray(const char* icoPath);
+  Tray(HICON hIcon);
   ~Tray();
   BOOL updateMenuItem(UINT id, const char* text);
 

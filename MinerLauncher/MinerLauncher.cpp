@@ -138,7 +138,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     if (!hMiners)
       return 1;
 
-    tray = new Tray(ICO_PATH);
+    tray = new Tray(LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_ICON1)));
     StartMiner();
 
     HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, HandleForegroundWindowChange, 0, 0, WINEVENT_SKIPOWNPROCESS | WINEVENT_OUTOFCONTEXT);
