@@ -1,11 +1,9 @@
 #include "Config.h"
 
-Config::Config(const char* path)
+Config::Config(const char* name)
 {
-  if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES)
+  if (!find(name))
     throw "Config not found";
-
-  Config::path = path;
 
   if (!GetPrivateProfileStringA("GAME", "profile", NULL, gaming_profile, sizeof(gaming_profile), path))
     throw "[GAME] profile not found in config";
@@ -46,4 +44,23 @@ int Config::load(const char* section, const char key[8], char** dst)
   return count;
 }
 
+BOOL Config::find(const char* name)
+{
+  // look for config in working directory
+  sprintf_s(path, ".\\%s", name);
+  if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES)
+    return TRUE;
 
+  // look for config in the same directory as the executable is located
+  GetModuleFileNameA(NULL, path, MAX_PATH);
+  if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    throw "Exe path too long";
+
+  PathRemoveFileSpecA(path);
+  sprintf_s(path, "%s\\%s", path, name);
+
+  if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES)
+    return TRUE;
+
+  return FALSE;
+}

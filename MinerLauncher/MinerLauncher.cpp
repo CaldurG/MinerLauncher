@@ -2,8 +2,7 @@
 #include "Tray.h"
 #include "Config.h"
 
-const char* CONFIG_PATH = ".\\MinerLauncher.ini";
-const char* ICO_PATH = ".\\MinerLauncher.ico";
+const char* CONFIG = "MinerLauncher.ini";
 
 Config* config;
 Tray* tray;
@@ -133,7 +132,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
   try
   {
-    config = new Config(CONFIG_PATH);
+    config = new Config(CONFIG);
     hMiners = (HANDLE*)calloc(config->miner_count, sizeof(HANDLE));
     if (!hMiners)
       return 1;

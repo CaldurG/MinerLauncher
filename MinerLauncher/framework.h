@@ -15,3 +15,4 @@
 #include <stdio.h>
 #include <Psapi.h>
 #include <shellapi.h>
+#include <shlwapi.h>

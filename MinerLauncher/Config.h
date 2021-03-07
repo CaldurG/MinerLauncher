@@ -7,7 +7,7 @@
 
 class Config
 {
-  const char* path = NULL;
+  char path[MAX_PATH];
 
 public:
   int game_count = 0;
@@ -17,9 +17,10 @@ public:
   char* games[MAX_ITEMS];
   char* miners[MAX_ITEMS];
 
-  Config(const char* path);
+  Config(const char* name);
   ~Config() {};
 
 private:
   int load(const char* section, const char key[8], char** dst);
+  BOOL find(const char* name);
 };
